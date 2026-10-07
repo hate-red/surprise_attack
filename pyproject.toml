@@ -1,0 +1,13 @@
+[project]
+name = "hackathon"
+version = "0.1.0"
+description = "Hackathon Project"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "alembic>=1.20.0",
+    "asyncpg>=0.32.0",
+    "fastapi>=0.142.2",
+    "pydantic-settings>=2.15.0",
+    "uvicorn>=0.54.0",
+]
