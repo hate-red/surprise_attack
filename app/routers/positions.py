@@ -1,134 +1,58 @@
-from fastapi import APIRouter, HTTPException, status, Depends
+from typing import Annotated
 
-from app.schemas.positions import (
-    PositionResponse,
-    OKEIResponse,
-    CharacteristicResponse,
-    CharacteristicValueResponse
-)
+from fastapi import APIRouter, Depends, HTTPException, Query
+
+from app.services import product_service
+from app.schemas.positions import PositionResponse
 from app.repositories.positions import PositionRepository
 
 
-router = APIRouter(prefix='/kgru-positions', tags=['Parsing'])
+router = APIRouter(prefix="/kgru-positions", tags=["Parsing"])
 
 
-mock_objects = [
-  {
-    "id": "position-001",
-    "name": "Software Engineer",
-    "okeis": [
-      {
-        "id": "okei-001",
-        "name": "Engineering"
-      }
+def validate_user_input(
+    user_input: Annotated[
+        str,
+        Query(
+            min_length=3,
+            max_length=1055,
+            description="Строка запроса пользователя",
+            examples=["найди смартфон Samsung 128 ГБ"],
+        ),
     ],
-    "characteristics": [
-      {
-        "id": "characteristic-001",
-        "name": "Years of experience",
-        "required": "true",
-        "values": [
-          {
-            "id": "value-001",
-            "is_range": "true",
-            "range": "(12: 100]",
-            "is_quality": "false",
-            "quality_description": "null",
-            "okeis": []
-          }
-        ]
-      },
-      {
-        "id": "characteristic-002",
-        "name": "Communication",
-        "required": "false",
-        "values": [
-          {
-            "id": "value-002",
-            "is_range": "false",
-            "range": "null",
-            "is_quality": "true",
-            "quality_description": "Communicates technical ideas clearly to teammates.",
-            "okeis": [
-              {
-                "id": "okei-002",
-                "name": "Collaboration"
-              }
-            ]
-          }
-        ]
-      }
-    ]
-  },
-  {
-    "id": "position-002",
-    "name": "Product Designer",
-    "okeis": [
-      {
-        "id": "okei-003",
-        "name": "Product Design"
-      },
-      {
-        "id": "okei-004",
-        "name": "User Research"
-      }
-    ],
-    "characteristics": [
-      {
-        "id": "characteristic-003",
-        "name": "Portfolio projects",
-        "required": "true",
-        "values": [
-          {
-            "id": "value-003",
-            "is_range": "true",
-            "range": "[0: 10]",
-            "is_quality": "false",
-            "quality_description": "null",
-            "okeis": []
-          }
-        ]
-      },
-      {
-        "id": "characteristic-004",
-        "name": "Visual design",
-        "required": "true",
-        "values": [
-          {
-            "id": "value-004",
-            "is_range": "false",
-            "range": "null",
-            "is_quality": "true",
-            "quality_description": "Creates consistent, accessible, and polished interfaces.",
-            "okeis": [
-              {
-                "id": "okei-005",
-                "name": "Visual Design"
-              }
-            ]
-          }
-        ]
-      }
-    ]
-  }
-]
+) -> str:
+    if not user_input.strip():
+        raise HTTPException(400, "Строка не может состоять только из пробелов")
+    if user_input.strip().isdigit():
+        raise HTTPException(400, "Ожидается текст, а не одно число")
+    return user_input.strip()
 
 
-@router.get('/{kgru_id}')
+def check_typos(
+    user_input: Annotated[str, Depends(validate_user_input)],
+) -> str:
+    # вызываем функцию модуля, а не метод сервиса
+    result = product_service.check_typos_in_text(user_input)
+    if result["has_typo"]:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Строка с опечаткой! Попробуйте ввести: {result['suggestion']}",
+        )
+    return user_input
+
+
+@router.post("/parse", response_model=list[PositionResponse])
+async def parse(
+    user_input: Annotated[str, Depends(check_typos)],
+) -> list[PositionResponse]:
+    service = product_service.get_parsing_service()
+    try:
+        return await service.get_validate(user_input)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.get("/{kgru_id}", response_model=PositionResponse | None)
 async def get_position(kgru_id: str):
-    position = await PositionRepository.get_one_by_id(id=kgru_id)
+    return await PositionRepository.get_one_or_none(id=kgru_id)
 
-    return position
-
-
-@router.get('/{char_id}')
-async def get_char(kgru_id: str) -> CharacteristicResponse | None:
-    position = await PositionRepository.get_one_or_none(id=kgru_id)
-
-    return position
-
-
-@router.post('/parse')
-async def parse(user_input: str) -> list[PositionResponse]:
-    objects = [PositionResponse(**values) for values in mock_objects]
-    return objects
