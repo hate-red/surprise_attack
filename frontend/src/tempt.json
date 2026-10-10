@@ -1,0 +1,13 @@
+{
+    "status": "success",
+    "code": 200,
+    "message": "Данные успешно получены",
+    "data": {
+      "KTRU_ids": ["12341234", "123421341234","123412341234"],
+      "characteristics": {
+        "require":  ["weight", "width", "blablba"],
+        "not_require": ["weight", "width", "blablba"]
+      },
+      "necessary_characterisitcs": ["weight", "width", "blablba"]
+    }
+  }

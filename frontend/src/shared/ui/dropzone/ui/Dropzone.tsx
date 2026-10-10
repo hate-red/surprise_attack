@@ -109,7 +109,7 @@ export const Dropzone: React.FC<DropzoneProps> = ({
         className={`relative flex flex-col items-center justify-center w-full min-h-[160px] p-6 border-2 border-dashed rounded-xl cursor-pointer transition-all duration-200 select-none ${
           isDragOver
             ? 'border-red-500 bg-red-50/50 dark:bg-red-950/20 scale-[0.99]'
-            : 'border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-[#264b83] hover:border-slate-300 dark:hover:border-slate-600 hover:bg-[#264b83]/50 dark:hover:bg-[#264b83]/50'
+            : 'border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/40 hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-100/50 dark:hover:bg-slate-900/60'
         } ${disabled ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''} ${className}`}
       >
         <input
@@ -130,10 +130,10 @@ export const Dropzone: React.FC<DropzoneProps> = ({
               className={`p-3 rounded-full transition-colors ${
                 isDragOver
                   ? 'bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400'
-                  : 'bg-slate-100 dark:bg-slate-200/60 text-slate-600 dark:text-slate-400'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
               }`}
             >
-              <UploadCloud className="w-6 h-6 text-red-600" />
+              <UploadCloud className="w-6 h-6 text-red-600 dark:text-red-500" />
             </div>
 
             <div>
@@ -143,7 +143,7 @@ export const Dropzone: React.FC<DropzoneProps> = ({
                 </span>{' '}
                 или перетащите файлы сюда
               </p>
-              <p className="mt-1 text-[11px] text-white dark:text-gray-300">
+              <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
                 {accept ? `Форматы: ${accept.join(', ')}` : 'Любые файлы'}
                 {maxSize && ` (до ${(maxSize / (1024 * 1024)).toFixed(0)} МБ)`}
               </p>

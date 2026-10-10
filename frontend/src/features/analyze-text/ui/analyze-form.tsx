@@ -25,21 +25,36 @@ export const AnalyzeForm: React.FC<Props> = ({ sendProductString, isLoading }) =
     toggleInputMode,
   } = useAnalyzeForm({ sendProductString });
 
+  const maxLength = 2000;
+  const currentLength = text?.length || 0;
+
   return (
     <>
-      <h2 className="text-sm font-bold text-slate-800 mb-5">
+      <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100 mb-5">
         Введите название и характеристики товара
       </h2>
       <Card>
         <form onSubmit={handleSubmit}>
           {isManualInput ? (
-            <textarea
-              rows={4}
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              className="w-full  border-3 border-slate-200 rounded-lg p-3 text-xs text-slate-800 focus:outline-none focus:border-[#274a83] resize-none mb-4 bg-slate-50/50"
-              placeholder="Введите данные..."
-            />
+            <div className="mb-4">
+              <textarea
+                rows={5}
+                maxLength={maxLength}
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-lg p-3 text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:border-[#274a83] dark:focus:border-blue-500 resize-none bg-slate-50/50 dark:bg-slate-900/50 placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                placeholder="Ноутбук игровой Acer Nitro 5 Intel Core i5-12500H 15.6 дюймов 512 ГБ 16 ГБ"
+              />
+              <div className="flex justify-end mt-1">
+                <span className={`text-[10px] font-medium ${
+                  currentLength >= maxLength 
+                    ? 'text-red-500 font-bold' 
+                    : 'text-slate-400 dark:text-slate-500'
+                }`}>
+                  {currentLength} / {maxLength}
+                </span>
+              </div>
+            </div>
           ) : (
             <Dropzone
               onFilesSelected={handleFilesSelected}
@@ -61,7 +76,7 @@ export const AnalyzeForm: React.FC<Props> = ({ sendProductString, isLoading }) =
               {isLoading ? 'Анализ...' : 'Анализировать'}
             </Button>
 
-            <Button className='cursor-pointer' type="button" onClick={toggleInputMode}>
+            <Button className="cursor-pointer" type="button" onClick={toggleInputMode}>
               {isManualInput ? <Paperclip /> : <Pen />}
             </Button>
           </div>
