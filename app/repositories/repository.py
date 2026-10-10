@@ -2,6 +2,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from dataclasses import dataclass
 
+
 @dataclass
 class User:
     id: int | None = None

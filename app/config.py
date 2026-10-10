@@ -27,3 +27,10 @@ def get_db_url() -> str:
         f'postgresql+asyncpg://{settings.DB_USER}:{settings.DB_PASSWORD}@'
         f'{settings.DB_HOST}:{settings.DB_PORT}/{settings.DB_NAME}'
     )
+
+ktru_path = project_root / 'КТРУ'
+
+ktru_file_paths = [
+    ktru_path / file for file in ktru_path.iterdir() 
+    if file.name.endswith('.xml')
+]
