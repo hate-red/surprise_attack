@@ -77,6 +77,7 @@ class CharacteristicValue(Base):
     __tablename__ = "characteristic_values"
 
     id: Mapped[str] = mapped_column(primary_key=True)
+    name: Mapped[str]
 
     is_range: Mapped[bool] = mapped_column(default=False)
     range: Mapped[Range[float]] = mapped_column(NUMRANGE, nullable=True)

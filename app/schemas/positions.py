@@ -12,11 +12,13 @@ class OKEIResponse(ORMResponse):
 
 class CharacteristicValueResponse(ORMResponse):
     id: str
+
     is_range: bool
-    min_value: float | None
-    max_value: float | None
+    range: str | None = None
+
     is_quality: bool
-    quality_description: str | None
+    quality_description: str | None = None
+
     okeis: list[OKEIResponse] = Field(default_factory=list)
 
 
