@@ -1,9 +1,13 @@
 from fastapi import FastAPI
+from app.routers import parsing
 
+app = FastAPI(
+    title="Hackathon API",
+    version="0.1.0"
+)
 
-app = FastAPI(title='Hackathon API')
+app.include_router(parsing.router)
 
-
-@app.get('/')
-async def root() -> dict:
-    return {'message': 'hi there!'}
+@app.get("/", tags=["Root"])
+async def root():
+    return {"message": "API is running"}
