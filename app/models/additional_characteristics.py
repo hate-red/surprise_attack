@@ -10,7 +10,9 @@ class Category(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str]
 
-    characteristics: Mapped[list['AdditionalCharacteristic']] = relationship(back_populates='categories')
+    characteristics: Mapped[list['AdditionalCharacteristic']] = relationship(
+        back_populates='category'
+    )
 
 
 class AdditionalCharacteristic(Base):
@@ -22,4 +24,6 @@ class AdditionalCharacteristic(Base):
     measure_units: Mapped[str]
 
     category_id: Mapped[int] = mapped_column(ForeignKey('categories.id'))
-    category: Mapped['Category'] = relationship(back_populates='characteristics')
+    category: Mapped['Category'] = relationship(
+        back_populates='characteristics'
+    )
