@@ -132,31 +132,3 @@ async def get_char(kgru_id: str) -> CharacteristicResponse | None:
 async def parse(user_input: str) -> list[PositionResponse]:
     objects = [PositionResponse(**values) for values in mock_objects]
     return objects
-
-
-# @router.post(
-#     '/parse-message',
-#     response_model=ParsedProductDTO,
-#     status_code=status.HTTP_200_OK,
-#     summary='Извлечь товар из текста'
-# )
-# async def parse_user_message(
-#     payload: UserMessageDTO,
-#     service: ProductParsingService = Depends(get_parsing_service)
-# ):
-#     raw_text = payload.message
-    
-#     try:
-#         parsed_result = await service.extract_product(raw_text)
-#         return parsed_result
-        
-#     except ValueError as e:
-#         raise HTTPException(
-#             status_code=status.HTTP_400_BAD_REQUEST,
-#             detail=str(e)
-#         )
-#     except Exception as e:
-#         raise HTTPException(
-#             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-#             detail='Ошибка при обработке сообщения'
-#         )
