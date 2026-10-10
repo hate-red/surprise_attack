@@ -28,9 +28,9 @@ def get_db_url() -> str:
         f'{settings.DB_HOST}:{settings.DB_PORT}/{settings.DB_NAME}'
     )
 
-ktru_path = project_root / 'КТРУ'
+# ktru_path = project_root / 'КТРУ'
 
-ktru_file_paths = [
-    ktru_path / file for file in ktru_path.iterdir() 
-    if file.name.endswith('.xml')
-]
+# ktru_file_paths = [
+#     ktru_path / file for file in ktru_path.iterdir() 
+#     if file.name.endswith('.xml')
+# ]

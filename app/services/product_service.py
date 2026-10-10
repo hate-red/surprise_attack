@@ -1,47 +1,48 @@
-from app.schemas.dto import ParsedProductDTO
+from __future__ import annotations
+from pyaspeller import YandexSpeller
+
+
+from typing import Any
+
+
+mock_objects: list[dict[str, Any]] = [
+    # ... ваш список без изменений ...
+]
+
+
+def check_typos_in_text(text: str) -> dict[str, Any]:
+    """
+    Заглушка. Когда подключите YandexSpeller — реализуйте здесь.
+    """
+    if not text or not isinstance(text, str):
+        return {"has_typo": False, "suggestion": text}
+
+    speller = YandexSpeller()
+    fixed = speller.spelled(text)
+    return {"has_typo": fixed != text, "suggestion": fixed}
+
+
 
 class ProductParsingService:
     def __init__(self, llm_client=None, ner_model=None):
         self.llm = llm_client
         self.ner = ner_model
 
-    async def extract_product(self, text: str) -> ParsedProductDTO:
-        """
-        Здесь живет вся логика парсинга (LLM / NER / Regex).
-        Транспортный слой про это ничего не знает.
-        """
-        # 1. Быстрая проверка (эвристика)
+    async def get_validate(self, text: str) -> list[dict[str, Any]]:
         if len(text) < 3:
             raise ValueError("Слишком короткий текст, не похоже на запрос товара")
 
-        # 2. Основная логика (например, вызов LLM)
-        # if self.llm:
-        #     result = await self.llm.parse(text)
-        #     return self._parse_llm_response(result)
-        
-        # 3. Пока заглушка — формируем и возвращаем DTO
-        return ParsedProductDTO(
-            name="ASUS VivoBook 15",
-            specs={"ОЗУ": "16 ГБ", "SSD": "512 ГБ"}
-        )
+        typo_result = check_typos_in_text(text)
+        if typo_result["has_typo"]:
+            raise ValueError(
+                f"Строка с опечаткой! Попробуйте ввести: {typo_result['suggestion']}"
+            )
 
-    def _parse_llm_response(self, raw_response: str) -> ParsedProductDTO:
-        """Вспомогательный метод для парсинга ответа LLM."""
-        # Здесь будет логика извлечения JSON из ответа LLM
-        pass
+        return mock_objects
+
+    def _parse_llm_response(self, raw_response: str) -> list[dict[str, Any]]:
+        raise NotImplementedError
 
 
-# --- Фабрика для Dependency Injection ---
 def get_parsing_service() -> ProductParsingService:
-    """
-    Создаёт и возвращает экземпляр сервиса.
-    Здесь можно инициализировать LLM-клиент и NER-модель.
-    """
-    # TODO: Заменить на реальную инициализацию
-    # llm_client = OpenAIClient(api_key="...")
-    # ner_model = load_ner_model("path/to/model")
-    
-    return ProductParsingService(
-        llm_client=None,  # Пока заглушка
-        ner_model=None    # Пока заглушка
-    )
+    return ProductParsingService(llm_client=None, ner_model=None)

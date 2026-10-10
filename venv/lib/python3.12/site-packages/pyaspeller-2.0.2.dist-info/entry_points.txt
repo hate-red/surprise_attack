@@ -1,0 +1,2 @@
+[console_scripts]
+pyaspeller = pyaspeller:main
