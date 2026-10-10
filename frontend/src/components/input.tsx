@@ -6,6 +6,15 @@ import { useState } from "react";
 export default function Input() {
   const [inputValue, setInputValue] = useState("");
 
+  const handleSubmit = async () => {
+    try {
+      const result = await sendProductString(inputValue);
+      console.log("Успешный ответ от бэкенда:", result);
+    } catch (error) {
+      console.error("Ошибка при отправке:", error);
+    }
+  };
+
   return (
     <>
       <textarea
@@ -17,7 +26,7 @@ export default function Input() {
       <button
         className="bg-blue-200 cursor-pointer"
         type="submit"
-        onClick={() => sendProductString(inputValue)}
+        onClick={handleSubmit}
       >
         отправить
       </button>

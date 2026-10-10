@@ -1,12 +1,10 @@
-// src/entities/product/api/sendProductString.ts
-
 export async function sendProductString(rawString: string): Promise<any> {
-  const response = await fetch("https://api.example.com/products/parse", {
+  const response = await fetch("http://127.0.0.1:8000/api/v1/parse-message", {
     method: "POST",
     headers: {
-      "Content-Type": "text/plain;charset=utf-8",
+      "Content-Type": "application/json",
     },
-    body: rawString,
+    body: JSON.stringify({ message: rawString }),
   });
 
   if (!response.ok) {
@@ -15,6 +13,5 @@ export async function sendProductString(rawString: string): Promise<any> {
     );
   }
 
-  // Возвращаем результат (json или текст, в зависимости от вашего API)
   return response.json();
 }
