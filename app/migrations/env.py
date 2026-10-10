@@ -6,7 +6,13 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 from alembic import context
 
 from app.database import DATABASE_URL, Base
-
+from app.models.positions import (
+    Position, 
+    # OKPD2, 
+    # OKEI, 
+    # Characteristic, 
+    # CharacteristicValue
+)
 # Здесь необходимо импортировать модели бд, 
 # чтобы для них сделались миграции. 
 # Пример импорта:
