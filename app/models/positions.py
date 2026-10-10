@@ -78,6 +78,7 @@ class CharacteristicValue(Base):
 
     id: Mapped[str] = mapped_column(primary_key=True)
     name: Mapped[str]
+    measure_units: Mapped[str] = mapped_column(nullable=True)
 
     is_range: Mapped[bool] = mapped_column(default=False)
     range: Mapped[Range[float]] = mapped_column(NUMRANGE, nullable=True)
