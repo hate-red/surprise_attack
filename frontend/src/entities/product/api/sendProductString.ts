@@ -13,14 +13,16 @@ export async function sendProductString(rawString: string): Promise<any> {
     console.log(response);
 
     if (!response.ok) {
-      throw new Error(
+      if(response.status === 400) return (response.json()) 
+      else {throw new Error(
         `Ошибка отправки данных: ${response.status} ${response.statusText}`
-      );
+      );}
     }
 
     return await response.json();
   } catch (error) {
-    console.error("Произошла ошибка при запросе:", error);
+  
+    console.error( error);
     throw error; 
   }
 }
