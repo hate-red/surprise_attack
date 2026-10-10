@@ -1,17 +1,26 @@
 export async function sendProductString(rawString: string): Promise<any> {
-  const response = await fetch("http://127.0.0.1:8000/api/v1/parse-message", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ message: rawString }),
-  });
+  const url = new URL("http://localhost:8000/kgru-positions/parse");
+  url.searchParams.append("user_input", rawString);
 
-  if (!response.ok) {
-    throw new Error(
-      `Ошибка отправки данных: ${response.status} ${response.statusText}`,
-    );
+  try {
+    const response = await fetch(url.toString(), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    console.log(response);
+
+    if (!response.ok) {
+      throw new Error(
+        `Ошибка отправки данных: ${response.status} ${response.statusText}`
+      );
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Произошла ошибка при запросе:", error);
+    throw error; 
   }
-
-  return response.json();
 }
