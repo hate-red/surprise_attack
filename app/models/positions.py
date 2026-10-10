@@ -1,5 +1,6 @@
 from sqlalchemy import Column, ForeignKey, Table
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.dialects.postgresql import NUMRANGE, Range
 
 from app.database import Base
 
@@ -78,8 +79,7 @@ class CharacteristicValue(Base):
     id: Mapped[str] = mapped_column(primary_key=True)
 
     is_range: Mapped[bool] = mapped_column(default=False)
-    min_value: Mapped[float | None] = mapped_column(nullable=True)
-    max_value: Mapped[float | None] = mapped_column(nullable=True)
+    range: Mapped[Range[float]] = mapped_column(NUMRANGE, nullable=True)
 
     is_quality: Mapped[bool] = mapped_column(default=False)
     quality_description: Mapped[str | None] = mapped_column(nullable=True)
