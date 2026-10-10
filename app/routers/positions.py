@@ -47,12 +47,12 @@ async def parse(
 ) -> list[PositionResponse]:
     service = product_service.get_parsing_service()
     try:
-        return await service.get_validate(user_input)
+        return await service.get_validate(user_input) # type: ignore
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.get("/{kgru_id}", response_model=PositionResponse | None)
+@router.get("/{kgru_id}")
 async def get_position(kgru_id: str):
-    return await PositionRepository.get_one_or_none(id=kgru_id)
+    return await PositionRepository.get_one_by_id(id=kgru_id)
 
