@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.routers.parsing import router  # <-- АБСОЛЮТНЫЙ импорт
+from app.routers.positions import router  # <-- АБСОЛЮТНЫЙ импорт
 
 app = FastAPI(title='Hackathon API')
 

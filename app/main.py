@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import parsing
+from app.routers import positions
 
 app = FastAPI(
     title="Hackathon API",
@@ -16,7 +16,7 @@ app.add_middleware(
     allow_headers=["*"],  # Разрешаем любые заголовки
 )
 
-app.include_router(parsing.router)
+app.include_router(positions.router)
 
 @app.get("/", tags=["Root"])
 async def root():
