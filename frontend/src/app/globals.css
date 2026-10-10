@@ -1,0 +1,68 @@
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap");
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: "Manrope", Arial, sans-serif;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: #ffffff;
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: #ffffff;
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--foreground);
+  --color-destructive: #ef4444;
+  --color-border: var(--border);
+  --color-input: var(--border);
+  --color-ring: var(--ring);
+}
+
+:root {
+  --background: #f7f8fa;
+  --card: #ffffff;
+  --secondary: #2b4c7e;
+  --accent: #e8eef6;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+  --foreground: #0f2748;
+  --primary: #e14c3e;
+  --border: #e2e8f0;
+  --ring: #2b4c7e;
+  color-scheme: light;
+}
+
+.dark {
+  --background: #1a2a41;
+  --card: #1e3150;
+  --secondary: #2b4c7e;
+  --accent: #134a70;
+  --muted: #263a5a;
+  --muted-foreground: #9aa8b8;
+  --foreground: #f8fafc;
+  --primary: #e14c3e;
+  --border: #334155;
+  --ring: #3c91e6;
+  color-scheme: dark;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    @apply scroll-smooth;
+  }
+
+  body {
+    @apply m-0 min-h-screen min-w-80 bg-background font-sans text-foreground antialiased;
+  }
+
+  button {
+    @apply cursor-pointer;
+  }
+}
