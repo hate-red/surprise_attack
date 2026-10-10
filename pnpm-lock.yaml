@@ -11,6 +11,9 @@ importers:
       axios:
         specifier: ^1.20.0
         version: 1.20.0(debug@4.4.3)
+      typo-js:
+        specifier: ^1.3.2
+        version: 1.3.2
 
 packages:
 
@@ -127,6 +130,9 @@ packages:
   proxy-from-env@2.1.0:
     resolution: {integrity: sha512-cJ+oHTW1VAEa8cJslgmUZrc+sjRKgAKl3Zyse6+PV38hZe/V6Z14TbCuXcan9F9ghlz4QrFr2c92TNF82UkYHA==}
     engines: {node: '>=10'}
+
+  typo-js@1.3.2:
+    resolution: {integrity: sha512-Z1YkJ7IIYNrFeOxAlHUercY4Q2I+PhYD/3VkWpJGy/Oqudy3bFpNcQxnv6Oa9fTSXCHPGz1eDoX1bZYm2Z891A==}
 
 snapshots:
 
@@ -246,3 +252,5 @@ snapshots:
   ms@2.1.3: {}
 
   proxy-from-env@2.1.0: {}
+
+  typo-js@1.3.2: {}

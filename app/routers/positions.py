@@ -36,7 +36,7 @@ def check_typos(
     if result["has_typo"]:
         raise HTTPException(
             status_code=400,
-            detail=f"Строка с опечаткой! Попробуйте ввести: {result['suggestion']}",
+            detail=f"{result['suggestion']}",
         )
     return user_input
 
