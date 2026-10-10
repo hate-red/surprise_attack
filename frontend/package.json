@@ -1,5 +1,5 @@
 {
-  "name": "hacaton_v2",
+  "name": "hacaton_v3",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -10,12 +10,9 @@
     "format": "biome format --write"
   },
   "dependencies": {
-    "clsx": "^2.1.1",
-    "lucide-react": "^1.54.0",
     "next": "16.4.0",
     "react": "19.3.0",
-    "react-dom": "19.3.0",
-    "tailwind-merge": "^3.7.0"
+    "react-dom": "19.3.0"
   },
   "devDependencies": {
     "@biomejs/biome": "2.4.2",
