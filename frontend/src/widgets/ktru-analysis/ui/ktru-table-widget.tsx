@@ -7,18 +7,18 @@ import { RefreshCw, Plus, Copy, Check } from 'lucide-react';
 
 interface Props {
   items: Characteristic[];
-  rawText?: string;
+  text?: string;
 }
 
 export const KtruTableWidget: React.FC<Props> = ({ 
   items, 
-  rawText = 'Acer puper truper 20000 rtx 4000\n\nХарактеристики устройства:\n- Процессор: Intel Core i5\n- Экран: 15.6 дюймов\n- Накопитель: 512 ГБ SSD' 
+  text =  "Ничего не введено"
 }) => {
   const [activeTab, setActiveTab] = useState<'characteristics' | 'source'>('characteristics');
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(rawText);
+    navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -119,7 +119,7 @@ export const KtruTableWidget: React.FC<Props> = ({
           </div>
 
           <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 font-mono text-xs text-slate-800 dark:text-slate-200 leading-relaxed whitespace-pre-wrap min-h-[220px]">
-            {rawText}
+            {text}
           </div>
         </div>
       )}

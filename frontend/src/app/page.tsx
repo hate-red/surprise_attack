@@ -1,4 +1,3 @@
-// src/app/page.tsx
 'use client';
 
 import { Header } from '@/widgets/header/ui/header';
@@ -9,6 +8,12 @@ import { Card } from '@/shared/ui/card/card';
 import { Badge } from '@/shared/ui/badge/badge';
 import { AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { sendProductString } from '@/entities/product/api/sendProductString';
+import { use, useState } from 'react';
+import { useAnalyzeStore } from '@/shared/model/use-analyze-store';
+import { CharacteristicModal } from '@/features/update-characteristic/ui/CharacteristicModal';
+import { TextCorrectionToaster } from '@/features/suggest-text-correction/ui/TextCorrectionToaster';
+
+
 
 const mockCharacteristics = [
   { id: '1', name: 'Тип процессора', description: 'Intel Core i5', normalized: 'Intel Core i5', unit: '—', confidence: '99%', isRequired: true },
@@ -17,9 +22,33 @@ const mockCharacteristics = [
   { id: '4', name: 'Диагональ экрана', description: 'Intel Core i5', normalized: 'Intel Core i5', unit: 'дюйм', confidence: '99%', isRequired: true },
 ];
 
+
+
 export default function Page() {
-  const handleAnalyze = (text: string) => {
-    sendProductString(text)
+  const [isLoading, setIsLoading] = useState(false);
+  const { text, setText, clearText } = useAnalyzeStore();
+  const [isOpenModal, setIsOpenModal] = useState(false)
+  const [suggest, setSuggest] = useState("")
+
+  console.log(text)
+  
+
+  // Делаем функцию async и дожидаемся выполнения запроса
+  const handleAnalyze = async (text: string) => {
+    setIsLoading(true);
+    try {
+      const data = await sendProductString(text);
+      if(data.detail){
+        console.log(data.detail)
+        setSuggest(prev => data.detail)
+      }
+   
+      // Здесь можно обработать успешный результат (например, обновить стейт таблицы)
+    } catch (error) {
+      console.error('Ошибка при отправке:', error);
+    } finally {
+      setIsLoading(false); // Выключится только после завершения запроса (успех или ошибка)
+    }
   };
 
   return (
@@ -39,7 +68,7 @@ export default function Page() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Левая колонка: Форма ввода + Блок КТРУ */}
           <div className="lg:col-span-5 space-y-5">
-            <AnalyzeForm sendProductString={handleAnalyze} />
+            <AnalyzeForm sendProductString={handleAnalyze} isLoading={isLoading} />
 
             {/* Блок проверки качества и КТРУ */}
             <div className="space-y-6">
@@ -85,7 +114,7 @@ export default function Page() {
                     <p className="text-[11px] text-amber-800 dark:text-amber-300/85 leading-relaxed mb-2">
                       Для полного соответствия КТРУ укажите тип матрицы экрана.
                     </p>
-                    <button className="text-xs font-semibold text-amber-900 dark:text-amber-400 hover:underline">
+                    <button onClick={() => setIsOpenModal(true)} className="text-xs font-semibold text-amber-900 dark:text-amber-400 hover:underline">
                       Добавить тип матрицы →
                     </button>
                   </div>
@@ -109,9 +138,15 @@ export default function Page() {
             <div className="mb-5">
               <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100">Итоговые Характеристики</h2>
             </div>
-            <KtruTableWidget items={mockCharacteristics} />
+            <KtruTableWidget items={mockCharacteristics} text={text}/>
           </div>
         </div>
+
+
+        {/* {Модалка} */}
+        {isOpenModal && <CharacteristicModal isOpen={isOpenModal} onSubmit={sendProductString} onClose={()=> {setIsOpenModal(false)}} />}
+
+      {suggest !== "" ? <TextCorrectionToaster replacetext={suggest} setSuggest={setSuggest}/> : ""}
       </main>
 
       <Footer />

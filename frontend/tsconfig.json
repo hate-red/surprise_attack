@@ -29,6 +29,6 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
     "**/*.mts"
-  ],
+, "src/shared/lib/spell-checker/analyzeTextSpelling.ts"  ],
   "exclude": ["node_modules"]
 }

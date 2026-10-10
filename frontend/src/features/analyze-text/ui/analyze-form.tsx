@@ -36,16 +36,17 @@ export const AnalyzeForm: React.FC<Props> = ({ sendProductString, isLoading }) =
       <Card>
         <form onSubmit={handleSubmit}>
           {isManualInput ? (
-            <div className="mb-4">
+            <div className="mb-2 relative">
               <textarea
+                spellCheck={true}          
                 rows={5}
                 maxLength={maxLength}
                 value={text}
                 onChange={(e) => setText(e.target.value)}
-                className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-lg p-3 text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:border-[#274a83] dark:focus:border-blue-500 resize-none bg-slate-50/50 dark:bg-slate-900/50 placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                className="h-[160px] w-full border-2 border-slate-200 dark:border-slate-700 rounded-lg p-3 text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:border-[#274a83] dark:focus:border-blue-500 resize-none bg-slate-50/50 dark:bg-slate-900/50 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                 placeholder="Ноутбук игровой Acer Nitro 5 Intel Core i5-12500H 15.6 дюймов 512 ГБ 16 ГБ"
               />
-              <div className="flex justify-end mt-1">
+              <div className="flex justify-end mt-1 absolute bottom-2 right-2">
                 <span className={`text-[10px] font-medium ${
                   currentLength >= maxLength 
                     ? 'text-red-500 font-bold' 

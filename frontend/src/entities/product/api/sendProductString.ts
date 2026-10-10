@@ -13,7 +13,9 @@ export async function sendProductString(rawString: string): Promise<any> {
     console.log(response);
 
     if (!response.ok) {
-      if(response.status === 400) return (response.json()) 
+      if(response.status === 400){
+        return await response.json();
+      } 
       else {throw new Error(
         `Ошибка отправки данных: ${response.status} ${response.statusText}`
       );}
