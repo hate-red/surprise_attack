@@ -28,6 +28,14 @@ class BaseRepository:
 
 
     @classmethod
+    async def get_all_ids_and_names(cls):
+        async with async_session_maker() as session:
+            stmt = select(cls.model.id, cls.model.name) # type: ignore
+            result = await session.execute(stmt)
+            return result.tuples().all()
+
+
+    @classmethod
     async def filter(cls, **filter_by) -> list:
         async with async_session_maker() as session:
             query = select(cls.model).filter_by(**filter_by) # type: ignore

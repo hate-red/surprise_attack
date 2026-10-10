@@ -1,36 +1,16 @@
-"""
-Парсер nsiKTRU XML → JSON.
-
-Правила:
-  - только ACTIVE позиции;
-  - только позиции, чьё name есть в файле целевых наименований;
-  - характеристики с actual=false отбрасываются;
-  - value с <rangeSet> → is_range=true; без → is_quality=true;
-  - OKEI у value ищется в любом месте под <value>;
-  - ktru_code — только у позиции; id — у OKEI, характеристики, value.
-
-Вход:
-  - config.ktru_file_paths (список путей к .xml или .zip)
-  - names_clothing_furniture_tools.txt (одно имя на строку, UTF-8)
-
-Выход:
-  - ktru_db.json
-"""
-
 import json
 import re
-import zipfile
 from pathlib import Path
 import xml.etree.ElementTree as ET
 
-from config import ktru_file_paths
+from config import ktru_xml_paths
 
 
 # ----------------------- НАСТРОЙКИ -----------------------
-NAMES_FILE  = Path("names_clothing_furniture_tools.txt")
-OUTPUT_JSON = Path("ktru_db.json")
-MATCH_MODE  = "exact"          # "exact" | "contains"
-SKIP_NOT_ACTUAL = True         # пропускать файлы, в имени которых 'not-actual'
+NAMES_FILE       = Path("names_clothing_furniture_tools.txt")
+OUTPUT_JSON      = Path("ktru_db.json")
+MATCH_MODE       = "exact"     # "exact" | "contains"
+SKIP_NOT_ACTUAL  = True        # пропускать файлы, в имени которых 'not-actual'
 # ---------------------------------------------------------
 
 
@@ -119,7 +99,6 @@ def matches(name, targets_norm, mode):
 # ============ ПАРСИНГ ============
 
 def parse_okei_list(container_elem):
-    """<oos:OKEIs> → [{'id','name'}, ...]"""
     result = []
     if container_elem is None:
         return result
@@ -132,7 +111,6 @@ def parse_okei_list(container_elem):
 
 
 def extract_okeis_from_value(value_elem):
-    """Все OKEI под <oos:value> на любой глубине, без дублей."""
     result = []
     seen = set()
     for child in value_elem.iter():
@@ -151,7 +129,6 @@ def extract_okeis_from_value(value_elem):
 
 
 def extract_range(value_elem):
-    """Первый <valueRange> внутри <rangeSet>, или None."""
     range_set = find_child(value_elem, "rangeSet")
     if range_set is None:
         return None
@@ -171,6 +148,7 @@ def extract_quality_description(value_elem):
     """Только <qualityDescription>. Если пусто — None."""
     txt = get_text(value_elem, "qualityDescription")
     return txt or None
+
 
 def parse_value(value_elem, char_code, vi):
     okeis = extract_okeis_from_value(value_elem)
@@ -224,7 +202,6 @@ def parse_position(pos_elem):
     if not code or not name:
         return None
 
-    # OKPD2
     okpd2 = None
     okpd2_elem = find_child(data, "OKPD2")
     if okpd2_elem is not None:
@@ -233,10 +210,8 @@ def parse_position(pos_elem):
         if okpd2_code or okpd2_name:
             okpd2 = {"id": okpd2_code, "name": okpd2_name}
 
-    # OKEI позиции
     okeis = parse_okei_list(find_child(data, "OKEIs"))
 
-    # Характеристики
     characteristics = []
     chars_container = find_child(data, "characteristics")
     if chars_container is not None:
@@ -255,26 +230,23 @@ def parse_position(pos_elem):
 
 
 def iter_positions(root):
-    """Все <oos:position> в дереве, независимо от namespace."""
     for elem in root.iter():
         if localname(elem.tag) == "position":
             yield elem
 
 
-def parse_xml_bytes(xml_bytes: bytes, targets_norm, match_mode):
-    """Парсит XML-байты, возвращает список подходящих dict-позиций."""
-    root = ET.fromstring(xml_bytes)
+def parse_xml_file(path: Path, targets_norm, match_mode):
+    """Парсит один .xml-файл, возвращает список подходящих dict-позиций."""
+    root = ET.parse(str(path)).getroot()
     result = []
     for pos_elem in iter_positions(root):
         data = find_child(pos_elem, "data")
         if data is None:
             continue
 
-        # Только ACTIVE
         if get_text(data, "status") != "ACTIVE":
             continue
 
-        # Фильтр по имени
         name = get_text(data, "name")
         if not name or not matches(name, targets_norm, match_mode):
             continue
@@ -285,54 +257,58 @@ def parse_xml_bytes(xml_bytes: bytes, targets_norm, match_mode):
     return result
 
 
-def iter_xml_from_zip(path: Path):
-    if path.suffix.lower() != ".zip":
-        return
-    with zipfile.ZipFile(path) as zf:
-        for inner in zf.namelist():
-            if inner.lower().endswith(".xml"):
-                with zf.open(inner) as f:
-                    yield inner, f.read()
+# ============ СБОР СПИСКА ФАЙЛОВ ============
+
+def collect_xml_files(paths):
+    """
+    Принимает список путей (файлы или папки), возвращает плоский список .xml-файлов.
+    Папки обходятся рекурсивно.
+    """
+    files = []
+    seen = set()
+    for p in paths:
+        p = Path(p)
+        if p.is_dir():
+            candidates = sorted(p.rglob("*.xml"))
+        elif p.is_file() and p.suffix.lower() == ".xml":
+            candidates = [p]
+        else:
+            print(f"  пропущен {p}: не .xml и не папка")
+            continue
+        for c in candidates:
+            if c.resolve() in seen:
+                continue
+            seen.add(c.resolve())
+            files.append(c)
+    return files
 
 
 # ============ ГЛАВНОЕ ============
 
-def parse_export_xml(ktru_paths: list[Path]):
+def parse_xml_paths(paths):
     target_names = load_target_names(NAMES_FILE)
     targets_norm = {normalize(n) for n in target_names}
     print(f"Наименований в файле: {len(target_names)}")
 
-    paths = [Path(p) for p in ktru_paths]
-    print(f"Путей в config: {len(paths)}")
+    xml_files = collect_xml_files(paths)
+    print(f"Найдено XML-файлов: {len(xml_files)}")
 
     positions_by_ktru_code = {}
     matched_names = set()
 
-    for i, path in enumerate(paths, 1):
+    for i, path in enumerate(xml_files, 1):
         if SKIP_NOT_ACTUAL and "not-actual" in path.name.lower():
             continue
 
         try:
-            if path.suffix.lower() == ".zip":
-                for xml_name, xml_bytes in iter_xml_from_zip(path):
-                    if SKIP_NOT_ACTUAL and "not-actual" in xml_name.lower():
-                        continue
-                    for pos in parse_xml_bytes(xml_bytes, targets_norm, MATCH_MODE):
-                        matched_names.add(pos["name"])
-                        positions_by_ktru_code.setdefault(pos["ktru_code"], pos)
-            elif path.suffix.lower() == ".xml":
-                xml_bytes = path.read_bytes()
-                for pos in parse_xml_bytes(xml_bytes, targets_norm, MATCH_MODE):
-                    matched_names.add(pos["name"])
-                    positions_by_ktru_code.setdefault(pos["ktru_code"], pos)
-            else:
-                print(f"  [{i}/{len(paths)}] пропущен {path.name}: неизвестный формат")
-                continue
+            for pos in parse_xml_file(path, targets_norm, MATCH_MODE):
+                matched_names.add(pos["name"])
+                positions_by_ktru_code.setdefault(pos["ktru_code"], pos)
         except Exception as e:
-            print(f"  [{i}/{len(paths)}] {path.name}: ошибка {e}")
+            print(f"  [{i}/{len(xml_files)}] {path.name}: ошибка {e}")
             continue
 
-        print(f"  [{i}/{len(paths)}] {path.name}")
+        print(f"  [{i}/{len(xml_files)}] {path.name}")
 
     result = {"positions": list(positions_by_ktru_code.values())}
 
@@ -375,4 +351,4 @@ def parse_export_xml(ktru_paths: list[Path]):
 
 
 if __name__ == "__main__":
-    parse_export_xml(ktru_file_paths)
+    parse_xml_paths(ktru_xml_paths)
