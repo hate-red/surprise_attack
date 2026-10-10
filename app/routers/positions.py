@@ -115,8 +115,8 @@ mock_objects = [
 
 
 @router.get('/{kgru_id}')
-async def get_position(kgru_id: str) -> PositionResponse | None:
-    position = await PositionRepository.get_one_or_none(id=kgru_id)
+async def get_position(kgru_id: str):
+    position = await PositionRepository.get_one_by_id(id=kgru_id)
 
     return position
 

@@ -44,7 +44,7 @@ class Position(Base):
 class OKEI(Base):
     __tablename__ = "okei"
 
-    id: Mapped[str] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str]
 
     positions: Mapped[list["Position"]] = relationship(
@@ -60,7 +60,7 @@ class OKEI(Base):
 class Characteristic(Base):
     __tablename__ = "characteristics"
 
-    id: Mapped[str] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str]
     required: Mapped[bool] = mapped_column(default=True)
 
@@ -76,7 +76,7 @@ class Characteristic(Base):
 class CharacteristicValue(Base):
     __tablename__ = "characteristic_values"
 
-    id: Mapped[str] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str]
     measure_units: Mapped[str] = mapped_column(nullable=True)
 
@@ -86,7 +86,7 @@ class CharacteristicValue(Base):
     is_quality: Mapped[bool] = mapped_column(default=False)
     quality_description: Mapped[str | None] = mapped_column(nullable=True)
 
-    characteristic_id: Mapped[str] = mapped_column(
+    characteristic_id: Mapped[int] = mapped_column(
         ForeignKey("characteristics.id")
     )
     characteristic: Mapped["Characteristic"] = relationship(
