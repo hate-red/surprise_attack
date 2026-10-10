@@ -28,6 +28,7 @@ pydantic-core==2.46.5
 pydantic-settings==2.15.0
 python-dotenv==1.2.4
 pyyaml==6.0.3
+rapidfuzz==3.14.6
 sqlalchemy==2.1.4
 starlette==1.7.0
 tqdm==4.70.1
