@@ -47,6 +47,24 @@ Qwen = Llama(
     verbose=False,
 )
 
+messages_chars = [
+    {"role": "system", "content": char_prompt},
+    {"role": "user", "content": model_input}
+]
+
+messages_names = [
+    {"role": "system", "content": name_prompt},
+    {"role": "user", "content": model_input}
+]
+
+model_output_chars = Qwen.create_chat_completion(
+    messages=messages_chars,
+    max_tokens=512
+)
+
+print(model_output_chars["choices"][0]["message"]["content"])
+
+
 def parse_string(user_input):
 
     pass
