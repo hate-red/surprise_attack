@@ -1,0 +1,4 @@
+# Необязательно: эксперимент с локальной LLM (app/services/get_evals.py).
+# Основной API работает без этих пакетов; для сборки нужен C/C++ компилятор.
+-r requirements.txt
+llama-cpp-python==0.3.36
