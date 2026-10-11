@@ -40,8 +40,8 @@ def load_models() -> dict:
     from llama_cpp import Llama
 
     INSTALL_FOLDER.mkdir(parents=True, exist_ok=True)
-    hf_hub_download(repo_id=QWEN_REPO_ID, filename=QWEN_FILENAME, local_dir=INSTALL_FOLDER)
-    hf_hub_download(repo_id=MINILM_REPO_ID, filename=MINILM_FILENAME, local_dir=INSTALL_FOLDER)
+    # hf_hub_download(repo_id=QWEN_REPO_ID, filename=QWEN_FILENAME, local_dir=INSTALL_FOLDER)
+    # hf_hub_download(repo_id=MINILM_REPO_ID, filename=MINILM_FILENAME, local_dir=INSTALL_FOLDER)
 
     _models['minilm'] = Llama(
         model_path=str(Path(INSTALL_FOLDER, MINILM_FILENAME)),
