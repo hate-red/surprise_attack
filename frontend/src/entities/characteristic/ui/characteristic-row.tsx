@@ -58,7 +58,7 @@ export const CharacteristicRow: React.FC<Props> = ({ data, onEdit, onDelete, onA
         </p>
         <div className="text-[10px] text-slate-400 dark:text-slate-500 font-normal mt-0.5">
           {status ? <span className={status.className}>{status.label}</span> : null}
-          {data.confidence ? <span> · уверенность {data.confidence}</span> : null}
+          
           {data.source === 'user' ? <span> · указано вами</span> : null}
         </div>
       </td>

@@ -5,6 +5,9 @@ import { Card } from '@/shared/ui/card/card';
 import { CharacteristicRow, Characteristic } from '@/entities/characteristic/ui/characteristic-row';
 import { RefreshCw, Plus, Copy, Check } from 'lucide-react';
 import { HighlightedText, HighlightLegend, type TextHighlight } from './highlighted-text';
+import { useMemo } from 'react';
+import { RowStatus } from '@/entities/product/model/types';
+
 
 interface Props {
   items: Characteristic[];
@@ -17,6 +20,22 @@ interface Props {
   onAdd?: () => void;
   onRefresh?: () => void;
 }
+
+const STATUS_ORDER: RowStatus[] = [
+  'ok',              // Соответствует КТРУ
+  'ste_only',        // Из выгрузки СТЕ
+  'no_value',        // Нет значения
+  'not_applicable',  // Не для этой позиции
+  'unrecognized',    // Не распознана
+  'unit_mismatch',   // Несовместимая единица
+  'no_constraints',
+  'invalid',
+  'conflict',
+  'ambiguous',
+  'missing',
+];
+
+
 
 export const KtruTableWidget: React.FC<Props> = ({
   items,
@@ -32,6 +51,25 @@ export const KtruTableWidget: React.FC<Props> = ({
   const [activeTab, setActiveTab] = useState<'characteristics' | 'source'>('characteristics');
   const [copied, setCopied] = useState(false);
 
+const sortedItems = useMemo(() => {
+  return [...items].sort((a, b) => {
+    // --- ПЕРВЫЙ УРОВЕНЬ: Сортировка по обязательности ---
+    // Преобразуем boolean в number: true -> 1, false -> 0
+    // Чтобы true (обязательные) шли первыми, вычитаем b - a
+    const reqA = a.isRequired ? 1 : 0;
+    const reqB = b.isRequired ? 1 : 0;
+    
+    if (reqA !== reqB) {
+      return reqB - reqA; 
+    }
+
+    // --- ВТОРОЙ УРОВЕНЬ: Сортировка по статусу (если обязательность одинаковая) ---
+    const indexA = STATUS_ORDER.indexOf(a.status!);
+    const indexB = STATUS_ORDER.indexOf(b.status!);
+
+    return indexA - indexB;
+  });
+}, [items]);
   const handleCopy = () => {
     navigator.clipboard.writeText(text);
     setCopied(true);
@@ -108,7 +146,7 @@ export const KtruTableWidget: React.FC<Props> = ({
                     </td>
                   </tr>
                 ) : (
-                  items.map((item) => (
+  sortedItems.map((item) => (
                     <CharacteristicRow
                       key={item.id}
                       data={item}
