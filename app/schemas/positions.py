@@ -156,8 +156,15 @@ class ProductOut(BaseModel):
 class ParseResponse(BaseModel):
     status: ResultStatus
     message: str
+    # разобранный текст: исходное описание или описание от LLM (см. analysis_source);
+    # позиции start/end в characteristics и spelling относятся к нему
     query: str
     corrected_query: str | None = None
+    # исходный текст пользователя, если разбиралось описание от LLM
+    original_query: str | None = None
+    # описание от LLM («наименование; характеристика: значение; …»), если она включена и ответила
+    llm_description: str | None = None
+    analysis_source: Literal['text', 'llm'] = 'text'
     product: ProductOut | None = None
     ktru_code: str | None = None
     ktru_name: str | None = None

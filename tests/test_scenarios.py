@@ -3,6 +3,7 @@
 Если справочник не загружен, тесты пропускаются.
 Запуск: python -m unittest tests.test_scenarios -v
 """
+import os
 import time
 import unittest
 
@@ -14,6 +15,8 @@ from app.services.product_service import get_parsing_service
 
 class ScenarioTest(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self):
+        # сценарии проверяют детерминированный конвейер; LLM — в tests/test_llm_adapter.py
+        os.environ['LLM_ENABLED'] = '0'
         try:
             index = await load_index()
         except Exception as exc:  # БД недоступна

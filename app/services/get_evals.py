@@ -1,17 +1,20 @@
 """
-Опциональный эксперимент с локальными LLM (Qwen 3.5 2B Q8 + MiniLM) для
-извлечения наименования и характеристик.
+Локальная LLM (Qwen 3.5 2B Q8 через llama.cpp) для извлечения наименования и
+характеристик из описания товара.
 
-Основной конвейер API (app/services/product_service.py) его НЕ использует:
-генерация на CPU занимала десятки секунд и не укладывалась в требование
-"ответ не позднее 5–6 секунд". Модуль сохранён для сравнения и экспериментов.
+Конвейер (app/services/product_service.py) использует её как необязательную подсказку:
+generate() возвращает два JSON, app/services/llm_adapter.py превращает их в
+«наименование; характеристика: значение; …», и конвейер разбирает этот текст
+наравне с исходным. Выключается LLM_ENABLED=0, лимит ожидания — LLM_TIMEOUT (с).
 
-Модели скачиваются и загружаются только при первом вызове load_models(),
-а не при импорте модуля. Зависимости: pip install -r requirements-llm.txt
+Модели загружаются при первом вызове load_models(), а не при импорте модуля.
+Зависимости: pip install -r requirements-llm.txt
 """
 from rapidfuzz import process
 
+import asyncio
 import json
+import threading
 from pathlib import Path
 
 from app.config import project_root
@@ -60,33 +63,41 @@ def load_models() -> dict:
     return _models
 
 
-async def get_output(user_input):
-    models = load_models()
-    qwen = models['qwen']
-    messages_chars = [
-        {"role": "system", "content": models['char_prompt']},
-        {"role": "user", "content": user_input}
-    ]
+_generate_lock = threading.Lock()
 
+
+def generate(user_input: str) -> tuple[str, str]:
+    """Синхронная генерация (вызывать из потока: asyncio.to_thread).
+
+    -> (JSON наименования, JSON характеристик) — сырые ответы модели."""
+    # одна модель на процесс: llama.cpp не рассчитан на параллельные вызовы,
+    # а два потока не должны загружать модель одновременно
+    with _generate_lock:
+        models = load_models()
+        return _complete(models, user_input)
+
+
+def _complete(models: dict, user_input: str) -> tuple[str, str]:
+    qwen = models['qwen']
     messages_names = [
         {"role": "system", "content": models['name_prompt']},
         {"role": "user", "content": user_input}
     ]
-    
-    model_output_names = qwen.create_chat_completion(
-        messages=messages_names,
-        max_tokens=512
-    )
-
-    model_output_chars = qwen.create_chat_completion(
-        messages=messages_chars,
-        max_tokens=512
-    )
-
+    messages_chars = [
+        {"role": "system", "content": models['char_prompt']},
+        {"role": "user", "content": user_input}
+    ]
+    model_output_names = qwen.create_chat_completion(messages=messages_names, max_tokens=512)
+    model_output_chars = qwen.create_chat_completion(messages=messages_chars, max_tokens=512)
     return (
-        model_output_names["choices"][0]["message"]["content"], # type: ignore
-        model_output_chars["choices"][0]["message"]["content"] # type: ignore
+        model_output_names["choices"][0]["message"]["content"],  # type: ignore
+        model_output_chars["choices"][0]["message"]["content"]  # type: ignore
     )
+
+
+async def get_output(user_input):
+    """Асинхронная обёртка: генерация в отдельном потоке, event loop не блокируется."""
+    return await asyncio.to_thread(generate, user_input)
 
 
 async def get_best_candidates_ids(user_input: str):

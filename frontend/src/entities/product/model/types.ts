@@ -87,8 +87,14 @@ export interface FragmentDto {
 export interface ParseResponse {
   status: ResultStatus;
   message: string;
+  /** разобранный текст: исходное описание или описание от LLM (см. analysis_source) */
   query: string;
   corrected_query: string | null;
+  /** исходный текст, если разбиралось описание от LLM */
+  original_query?: string | null;
+  /** «наименование; характеристика: значение; …» от Qwen, если она ответила */
+  llm_description?: string | null;
+  analysis_source?: 'text' | 'llm';
   product: { name: string; names: string[]; confidence: string; matched_text: string } | null;
   ktru_code: string | null;
   ktru_name: string | null;

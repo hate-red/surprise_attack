@@ -1,7 +1,8 @@
 """
 Анализ описания товара: наименование -> характеристики -> код КТРУ.
 
-Полностью детерминированный конвейер без внешних сервисов и LLM:
+Детерминированный конвейер без внешних сервисов (локальная LLM — необязательная
+подсказка, см. get_validate и llm_adapter.py):
   1. нормализация текста и проверка опечаток по словарю КТРУ/СТЕ;
   2. поиск наименования товара в индексе КТРУ (основы слов + IDF);
   3. загрузка характеристик кандидатов из PostgreSQL;
@@ -10,6 +11,8 @@
 """
 from __future__ import annotations
 
+import asyncio
+import logging
 import time
 from collections import Counter
 from typing import Any
@@ -58,6 +61,7 @@ from app.services.ktru_selector import (
     suggest_characteristics,
     validity_note,
 )
+from app.services.llm_adapter import describe_with_llm, llm_enabled
 from app.services.nlp.spelling import SpellChecker, apply_corrections
 from app.services.nlp.text import normalize_phrase, normalize_text, tokenize, word_stem
 
@@ -66,8 +70,28 @@ MAX_CANDIDATES_IN_RESPONSE = 20
 ERROR_STATUSES = {STATUS_INVALID, STATUS_UNIT_MISMATCH, STATUS_CONFLICT}
 
 
+logger = logging.getLogger(__name__)
+
+
 class ReferenceNotLoadedError(RuntimeError):
     """Справочник КТРУ ещё не загружен в БД."""
+
+
+_STATUS_RANK = {'resolved': 3, 'need_more_info': 2, 'low_confidence': 1, 'name_not_found': 0}
+
+
+def _rank(response: ParseResponse) -> tuple:
+    """Какой из двух разборов (исходный текст / описание от LLM) полезнее:
+    статус, затем характеристики, подтверждённые КТРУ, за вычетом ошибок,
+    затем насколько сужен список позиций, меньше нераспознанного и больше
+    распознанных характеристик. При полном равенстве остаётся исходный текст."""
+    confirmed = sum(1 for c in response.characteristics if c.status in (STATUS_OK, STATUS_NO_CONSTRAINTS))
+    errors = response.quality.get('errors', 0)
+    unrecognized = response.quality.get('unrecognized', 0)
+    remaining = response.candidates_total if response.status != 'name_not_found' else 10 ** 6
+    recognized = sum(1 for c in response.characteristics if c.source != 'reference'
+                     and c.status not in (STATUS_UNRECOGNIZED, STATUS_NO_VALUE, STATUS_MISSING))
+    return _STATUS_RANK.get(response.status, 0), confirmed - errors, -remaining, -unrecognized, recognized
 
 
 _spell_checkers: dict[int, SpellChecker] = {}
@@ -117,9 +141,40 @@ class ProductParsingService:
         self.ner = ner_model
 
     async def get_validate(self, text: str, request: ParseRequest | None = None) -> ParseResponse:
+        """Анализ описания. Если включена LLM (Qwen, app/services/get_evals.py), она
+        параллельно переписывает описание в «наименование; характеристика: значение; …»
+        (app/services/llm_adapter.py); конвейер разбирает оба варианта и возвращает
+        лучший результат. Ошибка, таймаут или мусор от LLM не мешают анализу текста."""
         if len(text.strip()) < 3:
             raise ValueError('Слишком короткий текст, не похоже на запрос товара')
         request = request or ParseRequest()
+        started = time.perf_counter()
+        llm_task = asyncio.ensure_future(describe_with_llm(normalize_text(text))) if llm_enabled() else None
+
+        response = await self._analyze(text, request)  # пока LLM генерирует
+        if llm_task is None:
+            return response
+        description = await llm_task
+        if description is None or not description.text:
+            return response
+        response.llm_description = description.text
+        try:
+            llm_response = await self._analyze(description.text, request)
+        except Exception:  # noqa: BLE001 — описание от LLM не должно ронять ответ по тексту
+            logger.exception('Не удалось разобрать описание от LLM: %r', description.text)
+            return response
+        llm_response.llm_description = description.text
+        chosen = llm_response if _rank(llm_response) > _rank(response) else response
+        if chosen is llm_response:
+            chosen.analysis_source = 'llm'
+            chosen.original_query = text
+            chosen.messages.append(Message(level='info', code='llm', text=(
+                f'Описание нормализовано моделью Qwen: «{description.text}».')))
+        chosen.timings_ms['llm'] = description.elapsed_ms
+        chosen.timings_ms['total'] = int((time.perf_counter() - started) * 1000)
+        return chosen
+
+    async def _analyze(self, text: str, request: ParseRequest) -> ParseResponse:
         timings: dict[str, int] = {}
         started = time.perf_counter()
 
@@ -133,20 +188,6 @@ class ProductParsingService:
 
         # 1. нормализация и опечатки
         normalized = normalize_text(text)
-
-        # == LLM STARTS ==
-        from app.services.get_evals import get_output
-        import json
-        name_s, chars_s = await get_output(normalized)
-        name = json.loads(name_s)['name']
-        
-        chars = ''
-        for key, value in json.loads(chars_s).items():
-            chars += f'{key} {value} '
-        print(f'{name} {chars}'.strip())
-        normalized = f'{name} {chars}'.strip()
-        # == LLM ENDS ==
-
         tokens = tokenize(normalized)
         checker = _spell_checker(index)
         issues = checker.check_tokens(tokens)
