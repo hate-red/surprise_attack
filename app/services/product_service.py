@@ -134,7 +134,7 @@ class ProductParsingService:
         # 1. нормализация и опечатки
         normalized = normalize_text(text)
 
-        # == UGLY STARTS ==
+        # == LLM STARTS ==
         from app.services.get_evals import get_output
         import json
         name_s, chars_s = await get_output(normalized)
@@ -143,9 +143,9 @@ class ProductParsingService:
         chars = ''
         for key, value in json.loads(chars_s).items():
             chars += f'{key} {value} '
-
+        print(f'{name} {chars}'.strip())
         normalized = f'{name} {chars}'.strip()
-        # == UGLY ENDS ==
+        # == LLM ENDS ==
 
         tokens = tokenize(normalized)
         checker = _spell_checker(index)
