@@ -36,6 +36,9 @@ export const Dropzone: React.FC<DropzoneProps> = ({
       // Проверка формата (MIME-type)
       if (accept && accept.length > 0) {
         const isAccepted = accept.some((type) => {
+          if (type.startsWith('.')) {
+            return file.name.toLowerCase().endsWith(type.toLowerCase());
+          }
           if (type.endsWith('/*')) {
             const category = type.split('/')[0];
             return file.type.startsWith(`${category}/`);

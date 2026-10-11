@@ -6,9 +6,11 @@ import { useAnalyzeStore } from '@/shared/model/use-analyze-store';
 interface TextCorrectionToasterProps {
   replacetext: string;
   setSuggest: Dispatch<SetStateAction<string>>;
+  /** Вызывается после замены текста (повторный анализ исправленного описания) */
+  onApply?: (text: string) => void;
 }
 
-export const TextCorrectionToaster = ({ replacetext, setSuggest }: TextCorrectionToasterProps) => {
+export const TextCorrectionToaster = ({ replacetext, setSuggest, onApply }: TextCorrectionToasterProps) => {
   const [isVisible, setIsVisible] = useState(true);
   const { setText } = useAnalyzeStore();
 
@@ -18,6 +20,7 @@ export const TextCorrectionToaster = ({ replacetext, setSuggest }: TextCorrectio
     setText(replacetext);
     setIsVisible(false);
     setSuggest('');
+    onApply?.(replacetext);
   };
 
   const handleDismiss = () => {
@@ -56,12 +59,14 @@ export const TextCorrectionToaster = ({ replacetext, setSuggest }: TextCorrectio
           {/* Кнопки действий */}
           <div className="mt-3.5 flex items-center gap-2">
             <button
+              type="button"
               onClick={handleApply}
               className="rounded-xl bg-red-600 px-3.5 py-1.5 text-xs font-medium text-white transition hover:bg-red-700 active:scale-95 focus:outline-none focus:ring-2 focus:ring-red-500/50"
             >
               Применить
             </button>
             <button
+              type="button"
               onClick={handleDismiss}
               className="rounded-xl border border-slate-800 bg-slate-800/40 px-3.5 py-1.5 text-xs font-medium text-slate-300 transition hover:bg-slate-800 hover:text-white active:scale-95"
             >
@@ -72,6 +77,7 @@ export const TextCorrectionToaster = ({ replacetext, setSuggest }: TextCorrectio
 
         {/* Кнопка закрытия (крестик) */}
         <button
+          type="button"
           onClick={handleDismiss}
           className="flex h-6 w-6 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-800 hover:text-slate-300"
           aria-label="Закрыть"

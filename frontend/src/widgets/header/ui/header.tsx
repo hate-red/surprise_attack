@@ -29,7 +29,7 @@ export const Header: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
         <div className="flex items-center space-x-8">
           <div className="flex items-center space-x-2 font-bold text-xl text-red-600 tracking-tight">
-            <Image src={'./Logo.svg'} alt='Logo' width={180} height={40} />
+            <Image src={'/Logo.svg'} alt='Logo' width={180} height={40} />
           </div>
           <button className="flex items-center text-slate-700 dark:text-slate-200 hover:text-red-600 dark:hover:text-red-400 font-medium text-sm transition-colors">
             <Menu className="w-5 h-5 mr-1.5" />
