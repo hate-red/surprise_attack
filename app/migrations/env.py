@@ -8,6 +8,7 @@ from alembic import context
 from app.database import DATABASE_URL, Base
 from app.models.positions import Position
 from app.models.additional_characteristics import Category
+from app.models.batches import ImportBatch
 # Здесь необходимо импортировать модели бд, 
 # чтобы для них сделались миграции. 
 # Пример импорта:

@@ -12,3 +12,19 @@ class CategoryRepository(BaseRepository):
 
 class AdditionalCharacteristicRepository(BaseRepository):
     model = AdditionalCharacteristic
+
+    @classmethod
+    async def get_all_with_categories(cls) -> list[tuple[str, str, str, str | None]]:
+        """(категория, характеристика, тип, единица) для словаря СТЕ."""
+        async with async_session_maker() as session:
+            stmt = (
+                select(
+                    Category.name,
+                    AdditionalCharacteristic.name,
+                    AdditionalCharacteristic.kind,
+                    AdditionalCharacteristic.measure_units,
+                )
+                .join(Category, Category.id == AdditionalCharacteristic.category_id)
+            )
+            result = await session.execute(stmt)
+            return list(result.all())

@@ -32,7 +32,7 @@ class BaseRepository:
         async with async_session_maker() as session:
             stmt = select(cls.model.id, cls.model.name) # type: ignore
             result = await session.execute(stmt)
-            return result.tuples().all()
+            return result.all()
 
 
     @classmethod
@@ -61,7 +61,7 @@ class BaseRepository:
 
 
     @classmethod
-    async def delete(cls, instance) -> None:
+    async def delete(cls, **filter_by) -> int:
         async with async_session_maker() as session:
                 async with session.begin():
                     query = delete(cls.model).filter_by(**filter_by) # type: ignore

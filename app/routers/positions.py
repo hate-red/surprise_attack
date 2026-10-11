@@ -1,9 +1,10 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Body, Depends, HTTPException, Query
 
 from app.services import product_service
-from app.schemas.positions import PositionResponse
+from app.services.ktru_index import load_index
+from app.schemas.positions import ParseRequest, ParseResponse, PositionResponse
 from app.repositories.positions import PositionRepository
 
 
@@ -15,9 +16,9 @@ def validate_user_input(
         str,
         Query(
             min_length=3,
-            max_length=1055,
+            max_length=2000,
             description="Строка запроса пользователя",
-            examples=["найди смартфон Samsung 128 ГБ"],
+            examples=["Стул ученический деревянный с регулировкой по высоте"],
         ),
     ],
 ) -> str:
@@ -28,31 +29,44 @@ def validate_user_input(
     return user_input.strip()
 
 
-def check_typos(
-    user_input: Annotated[str, Depends(validate_user_input)],
-) -> str:
-    # вызываем функцию модуля, а не метод сервиса
-    result = product_service.check_typos_in_text(user_input)
-    if result["has_typo"]:
-        raise HTTPException(
-            status_code=400,
-            detail=f"{result['suggestion']}",
-        )
-    return user_input
-
-
-@router.post("/parse", response_model=list[PositionResponse])
+@router.post("/parse", response_model=ParseResponse)
 async def parse(
-    user_input: Annotated[str, Depends(check_typos)],
-) -> list[PositionResponse]:
+    user_input: Annotated[str, Depends(validate_user_input)],
+    body: Annotated[ParseRequest | None, Body()] = None,
+) -> ParseResponse:
+    """Анализ описания товара.
+
+    Опечатки не блокируют анализ: они возвращаются в поле `spelling`
+    вместе с исправленным текстом `corrected_query`. В теле запроса можно
+    передать значения, изменённые или подтверждённые пользователем
+    (`overrides`), удалённые характеристики (`excluded`) и выбранный код.
+    """
     service = product_service.get_parsing_service()
     try:
-        return await service.get_validate(user_input) # type: ignore
+        return await service.get_validate(user_input, body)
+    except product_service.ReferenceNotLoadedError as e:
+        raise HTTPException(status_code=503, detail=str(e))
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.get("/{kgru_id}")
-async def get_position(kgru_id: str):
-    return await PositionRepository.get_one_by_id(id=kgru_id)
+@router.get("/typos")
+async def check_typos(user_input: Annotated[str, Depends(validate_user_input)]) -> dict:
+    """Проверка опечаток по словарю КТРУ/СТЕ (без внешних сервисов)."""
+    await load_index()
+    return product_service.check_typos_in_text(user_input)
 
+
+@router.post("/reload-index")
+async def reload_index() -> dict:
+    """Перестроить индекс после повторного импорта справочника."""
+    index = await load_index(force=True)
+    return index.stats
+
+
+@router.get("/{kgru_id}", response_model=PositionResponse)
+async def get_position(kgru_id: str) -> PositionResponse:
+    position = await PositionRepository.get_one_by_id(id=kgru_id)
+    if position is None:
+        raise HTTPException(404, "Позиция КТРУ не найдена")
+    return PositionResponse.model_validate(position)
